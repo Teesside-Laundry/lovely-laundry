@@ -43,3 +43,40 @@ if (prefersReduced || !('IntersectionObserver' in window)) {
   }, { threshold: 0.12 });
   revealEls.forEach(el => io.observe(el));
 }
+
+// October promo banner: 15% off dry cleaning with code DRYCLEAN15. Injected
+// above the top bar on every page and removes itself automatically once the
+// offer ends (midnight UK time, 1 Nov 2026). To end it early, delete this block.
+const PROMO_END = new Date('2026-11-01T00:00:00Z');
+const topbar = document.querySelector('.topbar');
+if (topbar && new Date() < PROMO_END && !document.querySelector('.promo')) {
+  const spark = '<svg class="promo-spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c.6 4.6 2.4 7.4 10 10-7.6 2.6-9.4 5.4-10 10-.6-4.6-2.4-7.4-10-10 7.6-2.6 9.4-5.4 10-10Z" fill="currentColor"/></svg>';
+  const group = (hidden) => `
+    <div class="promo-group"${hidden ? ' aria-hidden="true"' : ''}>
+      <span class="promo-item">${spark}<b>15% off</b>&nbsp;all dry cleaning this October</span>
+      <span class="promo-item">${spark}Use code <button type="button" class="promo-code"${hidden ? ' tabindex="-1"' : ''} title="Copy code">DRYCLEAN15</button></span>
+      <span class="promo-item">${spark}Offer ends 31&nbsp;October</span>
+    </div>`;
+  const promo = document.createElement('aside');
+  promo.className = 'promo';
+  promo.setAttribute('aria-label', 'October offer: 15% off all dry cleaning with code DRYCLEAN15, until 31 October');
+  promo.innerHTML = `
+    <div class="promo-viewport">
+      <div class="promo-track">${group(false)}${group(true)}${group(true)}${group(true)}</div>
+    </div>
+    <span class="promo-toast" role="status" aria-live="polite"></span>`;
+  topbar.before(promo);
+
+  // Tap the code to copy it.
+  const toast = promo.querySelector('.promo-toast');
+  let toastTimer;
+  promo.querySelectorAll('.promo-code').forEach((btn) =>
+    btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText('DRYCLEAN15'); toast.textContent = 'Code DRYCLEAN15 copied'; }
+      catch { toast.textContent = 'Use code DRYCLEAN15'; }
+      promo.classList.add('show-toast');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => promo.classList.remove('show-toast'), 1800);
+    })
+  );
+}
